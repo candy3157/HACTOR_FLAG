@@ -3,7 +3,17 @@ import { verifyFlag, CHALLENGES } from './utils/flagChecker';
 import './index.css';
 
 function App() {
-  const [solvedIds, setSolvedIds] = useState<string[]>([]);
+  const [solvedIds, setSolvedIds] = useState<string[]>(() => {
+    const saved = localStorage.getItem('ctf-solved');
+    if (!saved) return [];
+
+    try {
+      return JSON.parse(saved);
+    } catch (e) {
+      console.error('Failed to parse local storage', e);
+      return [];
+    }
+  });
   
   // Track selected challenge (null = List View, string = Detail View)
   const [selectedChallengeId, setSelectedChallengeId] = useState<string | null>(null);
@@ -11,6 +21,8 @@ function App() {
   // States for the Detailed View form
   const [flagInput, setFlagInput] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'error' | 'success'>('idle');
+
+  const isChallengeComingSoon = (id: string) => id === 'challenge_2';
 
   useEffect(() => {
     const orb1 = document.createElement('div');
@@ -20,15 +32,6 @@ function App() {
     document.body.appendChild(orb1);
     document.body.appendChild(orb2);
 
-    const saved = localStorage.getItem('ctf-solved');
-    if (saved) {
-      try {
-        setSolvedIds(JSON.parse(saved));
-      } catch (e) {
-        console.error("Failed to parse local storage", e);
-      }
-    }
-
     return () => {
       document.body.removeChild(orb1);
       document.body.removeChild(orb2);
@@ -37,6 +40,8 @@ function App() {
 
   // When opening a detail view, reset its state
   const openChallenge = (id: string) => {
+    if (isChallengeComingSoon(id)) return;
+
     setSelectedChallengeId(id);
     setFlagInput('');
     setStatus(solvedIds.includes(id) ? 'success' : 'idle');
@@ -74,13 +79,24 @@ function App() {
   };
 
   const createConfetti = () => {
+    type ConfettiPiece = {
+      x: number;
+      y: number;
+      vx: number;
+      vy: number;
+      size: number;
+      color: string;
+      rotation: number;
+      rotationSpeed: number;
+    };
+
     const canvas = document.createElement('canvas');
     canvas.id = 'confetti-canvas';
     document.body.appendChild(canvas);
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
     const ctx = canvas.getContext('2d')!;
-    const pieces: any[] = [];
+    const pieces: ConfettiPiece[] = [];
     const colors = ['#8b5cf6', '#10b981', '#f43f5e', '#3b82f6', '#f59e0b', '#ec4899'];
 
     for (let i = 0; i < 150; i++) {
@@ -199,13 +215,15 @@ function App() {
 
       <div className="grid-container">
         {CHALLENGES.map((challenge) => {
-          const isSolved = solvedIds.includes(challenge.id);
+          const isComingSoon = isChallengeComingSoon(challenge.id);
+          const isSolved = !isComingSoon && solvedIds.includes(challenge.id);
           
           return (
             <div 
               key={challenge.id} 
-              className={`challenge-card ${isSolved ? 'solved' : ''}`}
-              onClick={() => openChallenge(challenge.id)}
+              className={`challenge-card ${isSolved ? 'solved' : ''} ${isComingSoon ? 'coming-soon' : ''}`}
+              onClick={isComingSoon ? undefined : () => openChallenge(challenge.id)}
+              aria-disabled={isComingSoon}
             >
               <div className="card-header">
                 <h3 className="card-title">
@@ -221,7 +239,12 @@ function App() {
               
               <p className="card-desc">{challenge.description}</p>
 
-              {isSolved ? (
+              {isComingSoon ? (
+                <div className="coming-soon-overlay">
+                  <span className="coming-soon-emoji" aria-hidden="true">🚧</span>
+                  현재 만드는 중
+                </div>
+              ) : isSolved ? (
                 <div className="solved-overlay">
                   완료됨
                 </div>

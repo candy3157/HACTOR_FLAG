@@ -110,6 +110,16 @@ body {
   box-shadow: 0 20px 40px -10px var(--success-glow);
 }
 
+.challenge-card.coming-soon {
+  cursor: not-allowed;
+  border-color: rgba(245, 158, 11, 0.35);
+}
+
+.challenge-card.coming-soon:hover {
+  border-color: rgba(245, 158, 11, 0.55);
+  box-shadow: 0 20px 40px -10px rgba(245, 158, 11, 0.25);
+}
+
 .card-header {
   display: flex;
   justify-content: space-between;
@@ -159,6 +169,24 @@ body {
   border: 1px solid rgba(16, 185, 129, 0.2);
   justify-content: center;
   margin-top: auto;
+}
+
+.coming-soon-overlay {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #fbbf24;
+  font-weight: 600;
+  background: rgba(245, 158, 11, 0.1);
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  justify-content: center;
+  margin-top: auto;
+}
+
+.coming-soon-emoji {
+  font-size: 1.15rem;
 }
 
 /* --- Detail View Container --- */
